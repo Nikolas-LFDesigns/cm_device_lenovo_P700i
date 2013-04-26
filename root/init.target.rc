@@ -1,0 +1,353 @@
+import init.usb.rc
+import init.modules.rc
+#import init.leservice.rc
+
+on early-init
+# Backwards Compat
+    export EXTERNAL_STORAGE /mnt/sdcard write /sys/class/android_usb/android0
+    mkdir /mnt/sdcard 0775 system system
+    mkdir /mnt/sdcard2 0775 system system
+
+on early_property:ro.build.type=user
+    write /proc/bootprof "INIT: user build setting"
+
+on early_property:ro.build.type=eng
+    write /proc/bootprof "INIT: eng build setting"
+
+on init
+    write /proc/bootprof "INIT: on init start"
+    export EXTERNAL_STORAGE /mnt/sdcard
+
+    chmod 0666 /dev/lenovo_cabc   
+
+# Backwards Compat - XXX: Going away in G*
+    symlink /mnt/sdcard /sdcard
+
+on fs
+    write /proc/bootprof "INIT:NAND:Mount_START"
+    write /proc/bootprof "INIT:NAND:Mount_END"
+
+    write /proc/bootprof "INIT:eMMC:Mount_START"
+    # Mount /system rw first to give the filesystem a chance to save a checkpoint
+    mount ext4 /emmc@android /system commit=1,noauto_da_alloc
+    # RIL need to do this before the folder /system changed to read only
+    chown radio system /system/etc/ril
+    chmod 0770 /system/etc/ril
+    chmod 0444 /system/etc/ril/oper.lis
+    mount ext4 /emmc@android /system noatime ro remount 
+    mount ext4 /emmc@usrdata /data noatime nosuid nodev noauto_da_alloc
+    mount ext4 /emmc@cache /cache noatime nosuid nodev noauto_da_alloc
+    write /proc/bootprof "INIT:eMMC:Mount_END"
+
+on post-fs-data
+    write /proc/sys/fs/suid_dumpable 2
+
+    # create basic filesystem structure
+    mkdir /data/nvram 0770 root nvram
+    mkdir /data/local 0771 shell shell
+    #migrate from 2.1 example CH Yeh 01089
+    #mkdir /data/misc/hcid 0770 bluetooth bluetooth
+    mkdir /data/misc/vpn 0770 system system
+    mkdir /data/misc/vpn/profiles 0770 system system
+    mkdir /data/local 0771 shell shell
+    mkdir /data/nvram 0770 root nvram
+    chmod 0660 /data/misc/wifi/p2p_supplicant.conf
+
+#/dev/ttyMT2 for MT6620 BT/FM/GPS usage
+    chmod 0666 /dev/ttyMT2
+    chown system system /dev/ttyMT2
+
+# Turn on MT6620 by default
+    chmod 0666 /sys/class/rfkill/rfkill0/state
+    chown system system /sys/class/rfkill/rfkill0/state
+    write sys/class/rfkill/rfkill0/state 1
+#/dev/ttyMT1 for STP Tunnel
+    chmod 0666 /dev/ttyMT1
+    chown system system /dev/ttyMT1
+
+    chmod 0777 /dev/pmem_multimedia
+    chmod 0777 /dev/mt6516-isp
+    chmod 0777 /dev/mt6516-IDP
+    chmod 0777 /dev/mt9p012
+    chmod 0777 /dev/mt6516_jpeg
+    chmod 0777 /dev/FM50AF
+
+# Create char device file for WMT, GPS, BT, FM
+    mknod /dev/stpwmt c 190 0;
+    mknod /dev/stpgps c 191 0;
+    mknod /dev/stpbt  c 192 0;
+    mknod /dev/fm     c 193 0;
+    chmod 0660 /dev/stpwmt
+    chown system system /dev/stpwmt
+    # BT
+    chmod 0660 /dev/stpbt
+    # FM Radio device, FIXME: this is not a proper way to set permissions
+    chmod 0666 /dev/fm
+    # GPS
+    chmod 0666 /dev/gps
+    chmod 0660 /dev/stpgps
+
+    chmod 0660 /sys/class/rfkill/rfkill0/state 
+    chown bluetooth bluetooth /sys/class/rfkill/rfkill0/state 
+
+# GPS
+    chmod 0666 /dev/gps
+
+#for eng mode
+    chmod 0777 /dev/misc-sd
+
+# EM baseband file
+    chown root diag /system/bin/baseband_regdump
+    chmod 4750 /system/bin/baseband_regdump
+
+#EM eint
+    chown root diag /sys/bus/platform/drivers/eint/current_eint
+
+    # Sensor
+    chmod 0666 /dev/sensor
+
+    # GPIO
+    chmod 0666 /dev/mtgpio
+    
+   # Char device for BT 3.0 HS
+    mknod /dev/ampc0 c 151 0
+    chmod 0666 /dev/ampc0
+
+    chmod 0666 /dev/uinput
+
+
+    #give system access to rfkill device node
+    chmod 0660 /dev/rfkill
+
+##############
+    # dhcp server 
+    mkdir /data/misc/dhcp 0770 dhcp dhcp
+    chown dhcp dhcp /data/misc/dhcp
+
+    mknod /dev/ccci c 184 0
+    mknod /dev/ccci_fs c 178 0
+    mknod /dev/ccci_sys_rx c 184 2
+    mknod /dev/ccci_sys_tx c 184 3
+    mknod /dev/ccci_pcm_rx c 184 4
+    mknod /dev/ccci_pcm_tx c 184 5
+    mknod /dev/ccci_uart1_rx c 184 6
+    mknod /dev/ccci_uart1_rx_ack c 184 7
+    
+    mknod /dev/ccci_uem_rx c 184 18
+    mknod /dev/ccci_uem_tx c 184 19
+    chmod 0666 /dev/ccci_uem_rx
+    chmod 0666 /dev/ccci_uem_tx
+
+    mknod /dev/ccci_md_log_rx c 184 42
+    mknod /dev/ccci_md_log_tx c 184 43
+    chmod 0666 /dev/ccci_md_log_rx
+    chmod 0666 /dev/ccci_md_log_tx
+
+    chmod 0666 /dev/ccci
+    chmod 0660 /dev/ccci_fs
+    chmod 0666 /dev/ccci_pcm_rx
+    chmod 0666 /dev/ccci_pcm_tx
+    chmod 0600 /dev/ccci_sys_rx
+    chmod 0600 /dev/ccci_sys_tx
+    chmod 0600 /dev/ccci_uart1_rx
+    chmod 0600 /dev/ccci_uart1_rx_ack
+    chmod 0660 /dev/ttyC0
+
+    # M4U
+    mknod /dev/M4U_device c 188 0
+    chmod 0666 /dev/M4U_device
+
+    chmod 0666 /dev/pmem_multimedia
+    # load driver base driver
+    mknod /dev/drvb c 176 0
+    chmod 0666 /dev/drvb
+
+    # Permissions for System Server and daemons.
+    chown root   radio  /sys/class/leds/lcd-backlight/brightness
+    chown root   radio  /sys/class/leds/lcd-backlight/duty
+    chown root   radio  /sys/class/leds/lcd-backlight/div
+
+    # Touch Panel 
+    chmod 0664 /dev/touch
+    chown root diag /sys/module/tpd_setting/parameters/tpd_calmat
+    chown root diag /sys/module/tpd_setting/parameters/tpd_em_debounce_time
+    chown root diag /sys/module/tpd_setting/parameters/tpd_mode
+    chown root diag /sys/module/tpd_setting/parameters/tpd_em_debounce_time0
+    chown root diag /sys/module/tpd_setting/parameters/tpd_em_debounce_time1
+    chown root diag /sys/module/tpd_setting/parameters/tpd_em_spl_num
+    chown root diag /sys/module/tpd_setting/parameters/tpd_em_pressure_threshold
+    chown root diag /sys/module/tpd_setting/parameters/tpd_em_auto_time_interval
+    chown root diag /sys/module/tpd_setting/parameters/tpd_em_sample_cnt
+    chown root diag /sys/module/tpd_setting/parameters/tpd_em_asamp
+    chown root diag /sys/module/tpd_debug/parameters/tpd_em_log
+    chown root diag /sys/module/tpd_debug/parameters/tpd_em_log_to_fs
+    chown system system /sys/touchpanel/calibration
+    chmod 0660 /sys/touchpanel/calibration
+
+    # watch dog kicker
+    write /proc/wdk "0 20 30"
+
+    # RTC
+    mkdir /data/misc/rtc 0770 system system
+
+    # Modem related device nodes
+    mkdir /data/nvram/md 0700 root root
+ 
+    # Sensor
+    chmod 0666 /dev/hwmsensor
+    chmod 0666 /dev/msensor
+    chmod 0666 /dev/gsensor
+    chmod 0666 /dev/alsps
+
+    #VideoCodec
+    mknod /dev/Vcodec c 160 0
+    chmod 0666 /dev/Vcodec
+    
+    mkdir /data/amit/
+    mkdir /data/misc/sensors 0777 system system
+    mkdir /data/misc/akmd 0777 compass compass
+    chown system /sys/class/input/input4/enable
+    chown system /sys/class/input/input4/delay
+    chown system /sys/class/input/input4/wake
+    chown system /sys/class/input/input2/enable
+    chown system /sys/class/input/input2/wake
+    chown compass /sys/class/input/input3/offsets    
+
+    # GPIO
+    chmod 0666 /dev/mtgpio
+    
+        #EM eint
+    chown root diag /sys/bus/platform/drivers/eint/current_eint
+
+    # change MTKFB permission for Settings App JNI functions to set TVOut related status
+    chmod 0666 /dev/graphics/fb0
+    
+    # EM baseband file
+    chown root diag /system/bin/baseband_regdump
+    chmod 4750 /system/bin/baseband_regdump
+
+    #pmu
+    chown root radio /sys/devices/platform/mt-pmic/pmic_access_bank0
+    chown root radio /sys/devices/platform/mt-pmic/pmic_access_bank1
+    chmod 0664 /sys/devices/platform/mt-pmic/pmic_access_bank0
+    chmod 0664 /sys/devices/platform/mt-pmic/pmic_access_bank1
+
+    
+    #EM eint
+    chown root diag /sys/bus/platform/drivers/eint/current_eint
+
+    # for ppp options file
+    mkdir /data/misc/ppp
+    chmod 0777 /data/misc/ppp
+
+    # Android SEC related device nodes
+    mknod /dev/sec c 182 0
+    chmod 0660 /dev/sec
+
+    # bluetooth
+    mkdir /data/@btmtk 0770 bluetooth net_bt
+    chown bluetooth bluetooth /dev/hid-keyboard
+    chmod 0660 /dev/hid-keyboard
+    chown bluetooth bluetooth /dev/btn
+    chmod 0660 /dev/btn
+    #Use uinput's default permission
+    chown system net_bt_admin /dev/uinput
+
+    #TV-out
+    chmod 0666 /dev/TV-out
+
+    #HDMI
+    chmod 0666 /dev/hdmitx
+
+    # JPEG
+    chmod 0666 /dev/mtk_jpeg
+    
+    #SYSRAM
+    chmod 0666 /dev/camera-sysram
+
+    #ISP
+    chmod 0666 /dev/camera-isp
+
+    #ResMar
+    chmod 0666 /dev/camera-resmgr
+
+    # otg_test
+    chmod 0777 /dev/mt_otg_test
+    
+    # MDP
+    chmod 0666 /dev/mt6575-MDP
+
+on boot
+# WiFi
+    mkdir /data/misc/wifi 0770 wifi wifi
+    mkdir /data/misc/wifi/sockets 0770 wifi wifi
+    mkdir /data/misc/wpa_supplicant 0770 wifi wifi
+    mkdir /data/misc/p2p_supplicant 0770 wifi wifi
+    mkdir /data/misc/dhcp 0770 dhcp dhcp
+    chown dhcp dhcp /data/misc/dhcp
+    chmod 0660 /sys/class/rfkill/rfkill1/state
+    chown wifi system /sys/class/rfkill/rfkill1/state
+    chown wifi wifi /data/misc/wifi
+
+# Turn off wifi by default
+    write /sys/class/rfkill/rfkill1/state 0
+
+# WiFi hotspot / WiFi P2P
+    chmod 0660 /data/misc/wifi/p2p_supplicant.conf
+    chown wifi wifi /data/misc/wifi/p2p_supplicant.conf
+    chmod 0660 /data/misc/wifi/p2p.conf
+    chown wifi wifi /data/misc/wifi/p2p.conf
+    write sys/class/rfkill/rfkill0/state 0
+
+# Start default class, this line is very important!!
+#    start vold
+#    start sdcard
+
+    write /sys/module/lowmemorydetect/parameters/lowmem_threshold 15728640
+    #the back 15 char 
+    write /sys/module/lowmemorydetect/parameters/systemapp "system_process","ndroid.systemui","d.process.acore","m.android.phone","ndroid.settings","d.process.media","ovo.appsmanager","system_server","ackageinstaller","lenovo.launcher"
+
+    write /proc/sys/vm/dirty_writeback_centisecs 300
+
+    chmod 0664 /sys/class/leds/lcd-backlight/brightness
+    chown system system /sys/class/leds/breath/brightness
+    chown system system /sys/class/leds/breath/color
+    chown system system /sys/class/leds/breath/style
+    write /sys/class/leds/breath/brightness  1
+    #lenovo-sw jixj 2011.923 add end
+
+    chown root   radio  /sys/class/leds/lcd-backlight/duty
+    chown root   radio  /sys/class/leds/lcd-backlight/div
+    chown system system /sys/class/leds/lcd-backlight/trigger
+    chown system system /sys/class/leds/button-backlight/trigger
+    chown system system /sys/class/leds/keyboard-backlight/trigger
+    chown system system /sys/class/leds/jogball-backlight/trigger
+    chown system system /sys/class/leds/red/trigger
+    chown system system /sys/class/leds/green/trigger
+    chown system system /sys/class/leds/blue/trigger
+
+# AGPS
+    chmod 0777 /system/bin/mtk_agpsd
+
+## Thermal
+    #change permissions on thermal devices
+    chown root system /proc/mtktscpu/mtktscpu
+    chmod 0660 /proc/mtktscpu/mtktscpu
+    chown root system /proc/mtktsabb/mtktsabb
+    chmod 0660 /proc/mtktsabb/mtktsabb
+    chown root system /proc/mtktsbattery/mtktsbattery
+    chmod 0660 /proc/mtktsbattery/mtktsbattery
+    chown root system /proc/mtktspa/mtktspa
+    chmod 0660 /proc/mtktspa/mtktspa
+    chown root system /proc/mtktspmic/mtktspmic
+    chmod 0660 /proc/mtktspmic/mtktspmic
+    chown root system /proc/wmt_tm/wmt_tm
+    chmod 0660 /proc/wmt_tm/wmt_tm
+    chown root system /proc/driver/mtk_thermal_monitor
+    chmod 0660 /proc/driver/mtk_thermal_monitor
+
+    setprop net.eth0.dns1 8.8.8.8
+
+# Define RIL properties
+    setprop rild.nw.operlist /system/etc/ril/oper.lis
+
