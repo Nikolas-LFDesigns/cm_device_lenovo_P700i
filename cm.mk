@@ -1,19 +1,18 @@
-## Specify phone tech before including full_phone
-$(call inherit-product, vendor/cm/config/gsm.mk)
+# Correct bootanimation size for the screen
+TARGET_SCREEN_HEIGHT := 800
+TARGET_SCREEN_WIDTH := 480
 
-# Release name
-PRODUCT_RELEASE_NAME := P700i
+$(call inherit-product, device/Lenovo/p700i/device_p700i.mk)
 
 # Inherit some common CM stuff.
-$(call inherit-product, vendor/cm/config/common_full_phone.mk)
+$(call inherit-product, vendor/cm/config/common_mini_phone.mk)
 
-# Inherit device configuration
-$(call inherit-product, device/lenovo/P700i/device_P700i.mk)
+# Inherit some common CM stuff.
+$(call inherit-product, vendor/cm/config/gsm.mk)
 
 ## Device identifier. This must come after all inclusions
-PRODUCT_DEVICE := P700i
-PRODUCT_NAME := cm_P700i
-PRODUCT_BRAND := lenovo
-PRODUCT_MODEL := P700i
-PRODUCT_MANUFACTURER := lenovo
-PRODUCT_RELEASE_NAME := P700i
+PRODUCT_DEVICE := p700i
+PRODUCT_NAME := cm_p700i
+PRODUCT_BRAND := Lenovo
+PRODUCT_MODEL := Lenovo p700i
+PRODUCT_MANUFACTURER := LENOVO

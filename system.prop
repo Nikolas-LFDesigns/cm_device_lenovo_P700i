@@ -1,34 +1,34 @@
-#
-# begin mediatek build properties for P700i
-#
-
-ro.product.ota.model=LenovoP700i_ROW
-ro.product.sw.internal.version=P700i_ROW_S106_121001
-ro.product.hw.version=9001
-ro.product.particular.version=LENOVO_FUJIAN
-
-ro.mediatek.version.release=ALPS.ICS2.6577.SP.V1.20120605
+# begin mediatek build properties
+ro.mediatek.version.release=ALPS.ICS2.MP.V1
 ro.mediatek.platform=MT6577
 ro.mediatek.chip_ver=S01
-ro.mediatek.version.branch=ALPS.ICS2.6577.SP
+ro.mediatek.version.branch=ALPS.ICS2.MP
+# end mediatek build properties
+#
+# system.prop for generic sdk
+#
 
-#RIL
 rild.libpath=/system/lib/mtk-ril.so
 rild.libargs=-d /dev/ttyC0
-ril.current.share_modem=2
-ro.telephony.call_ring.multiple=0
-persist.radio.fd.counter=20
-persist.radio.fd.off.counter=20
 
-#wifi-specific
+
+# MTK, Infinity, 20090720 {
 wifi.interface=wlan0
-ro.mediatek.wlan.wsc=1
-ro.mediatek.wlan.p2p=0
-mediatek.wlan.ctia=0
-wifi.tethering.interface=ap0
-wifi.direct.interface=p2p0
+# MTK, Infinity, 20090720 }
 
-# media profiles
+# MTK, mtk03034, 20101210 {
+ro.mediatek.wlan.wsc=1
+# MTK, mtk03034 20101210}
+# MTK, mtk03034, 20110318 {
+ro.mediatek.wlan.p2p=1
+# MTK, mtk03034 20110318}
+
+# MTK, mtk03034, 20101213 {
+mediatek.wlan.ctia=0
+# MTK, mtk03034 20101213}
+
+
+# MTK, TeChien {
 ro.media.enc.hprof.file.format=3gp
 ro.media.enc.hprof.codec.vid=m4v
 ro.media.enc.hprof.vid.width=720
@@ -61,6 +61,19 @@ ro.media.enc.lprof.codec.aud=amrnb
 ro.media.enc.lprof.aud.bps=12200
 ro.media.enc.lprof.aud.ch=1
 ro.media.enc.lprof.aud.hz=8000
+# MTK, TeChien }
+
+#
+wifi.tethering.interface=ap0
+#
+
+ro.opengles.version=131072
+
+wifi.direct.interface=p2p0
+dalvik.vm.heapgrowthlimit=48m
+dalvik.vm.heapsize=128m
+#temporary fix dalvik cache
+dalvik.vm.dexopt-data-only=1
 
 # Encrypt phone function
 ro.crypto.tmpfs_options=mode=0771,uid=1000,gid=1000
@@ -76,13 +89,31 @@ ro.sys.usb.mtp.whql.enable=0
 # Power off opt in IPO
 sys.ipo.pwrdncap=2
 
-persist.sys.usb.config=mass_storage,adb
+net.tinno.bt.name = WIKO-CINK SLIM
 
-#graphics
+ro.sys.usb.storage.type=mtp,mass_storage
+ro.sf.lcd_density=240
+
+#
+# ADDITIONAL_BUILD_PROPERTIES
+#
+fmradio.driver.chip=3
+ro.sf.hwrotation=0
+ril.current.share_modem=2
+launcherplus.allappsgrid=2d
+launcher2.allappsgrid=3d_20
+curlockscreen=2
 ro.mediatek.gemini_support=true
-ro.opengles.version=131072
-
-#FM
+persist.radio.fd.counter=20
+persist.radio.fd.off.counter=20
+drm.service.enabled=true
 fmradio.driver.enable=1
-
+mediatek.wlan.chip=MT6620
+mediatek.wlan.module.postfix=_mt6620
 dalvik.vm.mtk-stack-trace-file=/data/anr/mtk_traces.txt
+ro.config.notification_sound=Amenity.ogg
+ro.config.alarm_alert=GreenAlarm.ogg
+ro.config.ringtone=Dell.ogg
+persist.sys.timezone=Europe/Paris
+net.bt.name=Android
+dalvik.vm.stack-trace-file=/data/anr/traces.txt

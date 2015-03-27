@@ -1,0 +1,14 @@
+diff --git a/samples/FmRadioTransmitter/Android.mk b/samples/FmRadioTransmitter/Android.mk
+index 0c25b35..7134574 100755
+--- a/samples/FmRadioTransmitter/Android.mk
++++ b/samples/FmRadioTransmitter/Android.mk
+@@ -1,3 +1,4 @@
++ifneq ($(BOARD_DISABLE_FMRADIO_TRANSMITTER_TEST), true)
+ LOCAL_PATH:= $(call my-dir)
+ include $(CLEAR_VARS)
+ 
+@@ -10,3 +11,4 @@ LOCAL_PACKAGE_NAME := FmRadioTransmitter
+ LOCAL_SDK_VERSION := current
+ 
+ include $(BUILD_PACKAGE)
++endif # BOARD_DISABLE_FMRADIO_TRANSMITTER_TEST

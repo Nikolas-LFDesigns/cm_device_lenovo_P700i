@@ -1,0 +1,95 @@
+From 59b29477e7d453a044498f14d801b9f8e96c87c7 Mon Sep 17 00:00:00 2001
+From: Legrand Benjamin <android@legrand.ws>
+Date: Sun, 7 Apr 2013 14:08:09 +0200
+Subject: [PATCH] Mediatek Hack for building kernel
+
+Change-Id: I768ddb97ed60959f6aa45ca9e154a1e810056f27
+---
+ core/combo/arch/arm/armv7-a-neon.mk |  9 ++++++++-
+ core/tasks/kernel.mk                | 28 ++++++++++++++++++++++------
+ 2 files changed, 30 insertions(+), 7 deletions(-)
+
+diff --git a/core/combo/arch/arm/armv7-a-neon.mk b/core/combo/arch/arm/armv7-a-neon.mk
+index 7b5b8ed..1b8181a 100644
+--- a/core/combo/arch/arm/armv7-a-neon.mk
++++ b/core/combo/arch/arm/armv7-a-neon.mk
+@@ -11,6 +11,11 @@ ARCH_ARM_HAVE_ARMV7A            := true
+ ARCH_ARM_HAVE_VFP               := true
+ ARCH_ARM_HAVE_VFP_D32           := true
+ ARCH_ARM_HAVE_NEON              := true
++#wschen
++ARCH_ARM_HAVE_TLS_REGISTER      := true
++ARCH_ARM_NEON_SUPPORTS_UNALIGNED_ACCESS := true
++ARCH_ARM_MEMCPY_ALIGNMENT_DIVIDER := 64
++ARCH_ARM_MEMSET_NEON_DIVIDER := 64
+ 
+ # Note: Hard coding the 'tune' value here is probably not ideal,
+ # and a better solution should be found in the future.
+@@ -18,7 +23,9 @@ ARCH_ARM_HAVE_NEON              := true
+ arch_variant_cflags := \
+     -march=armv7-a \
+     -mfloat-abi=softfp \
+-    -mfpu=neon
++    -mfpu=neon \
++    -ftree-vectorize \
++    -mtune=cortex-a9
+ 
+ arch_variant_ldflags := \
+ 	-Wl,--fix-cortex-a8
+diff --git a/core/tasks/kernel.mk b/core/tasks/kernel.mk
+index 81a1916..7133d15 100644
+--- a/core/tasks/kernel.mk
++++ b/core/tasks/kernel.mk
+@@ -65,12 +65,20 @@ ifeq "$(wildcard $(KERNEL_SRC) )" ""
+ else
+     NEEDS_KERNEL_COPY := true
+     ifeq ($(TARGET_KERNEL_CONFIG),)
+-        $(warning **********************************************************)
+-        $(warning * Kernel source found, but no configuration was defined  *)
+-        $(warning * Please add the TARGET_KERNEL_CONFIG variable to your   *)
+-        $(warning * BoardConfig.mk file                                    *)
+-        $(warning **********************************************************)
+-        # $(error "NO KERNEL CONFIG")
++        ifeq ($(TARGET_KERNEL_PROVIDES_BUILD_COMMANDS),)
++            $(warning **********************************************************)
++            $(warning * Kernel source found, but no configuration was defined  *)
++            $(warning * Please add the TARGET_KERNEL_CONFIG variable to your   *)
++            $(warning * BoardConfig.mk file                                    *)
++            $(warning **********************************************************)
++            # $(error "NO KERNEL CONFIG")
++        else
++            $(warning **********************************************************)
++            $(warning * Kernel source found, but no configuration was defined  *)
++            $(warning * You have provided your own way of building the kernel  *)
++            $(warning * Ensure this is what you expected                       *)
++            $(warning **********************************************************)
++        endif
+     else
+         #$(info Kernel source found, building it)
+         FULL_KERNEL_BUILD := true
+@@ -127,6 +135,8 @@ $(KERNEL_OUT):
+ 	mkdir -p $(KERNEL_OUT)
+ 	mkdir -p $(KERNEL_MODULES_OUT)
+ 
++ifeq ($(TARGET_KERNEL_PROVIDES_BUILD_COMMANDS),)
++
+ $(KERNEL_CONFIG): $(KERNEL_OUT)
+ 	$(MAKE) -C $(KERNEL_SRC) O=$(KERNEL_OUT) ARCH=$(TARGET_ARCH) $(ARM_CROSS_COMPILE) $(KERNEL_DEFCONFIG)
+ 
+@@ -148,7 +158,13 @@ $(TARGET_PREBUILT_INT_KERNEL): $(TARGET_KERNEL_MODULES)
+ 
+ $(KERNEL_HEADERS_INSTALL): $(KERNEL_OUT) $(KERNEL_CONFIG)
+ 	$(MAKE) -C $(KERNEL_SRC) O=$(KERNEL_OUT) ARCH=$(TARGET_ARCH) $(ARM_CROSS_COMPILE) headers_install
++else
+ 
++$(warning ***************************************************************)
++$(warning *Using provided build commands*)
++$(warning ***************************************************************)
++include $(TARGET_KERNEL_PROVIDES_BUILD_COMMANDS)
++endif # TARGET_KERNEL_PROVIDES_BUILD_COMMANDS
+ endif # FULL_KERNEL_BUILD
+ 
+ ## Install it
+-- 
+1.8.1.2
+

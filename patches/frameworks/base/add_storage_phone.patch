@@ -1,0 +1,13 @@
+diff --git a/core/res/res/values/strings.xml b/core/res/res/values/strings.xml
+index 5174242..c309ba8 100755
+--- a/core/res/res/values/strings.xml
++++ b/core/res/res/values/strings.xml
+@@ -3366,6 +3366,8 @@
+ 
+     <!-- Storage description for USB storage. [CHAR LIMIT=NONE] -->
+     <string name="storage_usb">USB storage</string>
++	
++	<string name="storage_phone">Phone storage</string>
+ 
+     <!-- Button text for the edit menu in input method extract mode. [CHAR LIMIT=16] -->
+     <string name="extract_edit_menu_button">Edit...</string>

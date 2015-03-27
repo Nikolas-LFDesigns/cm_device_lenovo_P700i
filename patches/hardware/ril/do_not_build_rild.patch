@@ -1,0 +1,52 @@
+diff --git a/mock-ril/Android.mk b/mock-ril/Android.mk
+index 540bf89..6b05dc1 100644
+--- a/mock-ril/Android.mk
++++ b/mock-ril/Android.mk
+@@ -2,6 +2,8 @@
+ #
+ # not currently building V8 for x86 targets
+ 
++ifneq ($(BOARD_NO_MOCK_RIL), true)
++
+ LOCAL_PATH:= $(call my-dir)
+ 
+ # Directories of source files
+@@ -81,3 +83,4 @@ src_java :=
+ src_py :=
+ src_js :=
+ src_proto :=
++endif # BOARD_NO_MOCK_RIL
+diff --git a/reference-ril/Android.mk b/reference-ril/Android.mk
+index aac273f..fa3ee8b 100644
+--- a/reference-ril/Android.mk
++++ b/reference-ril/Android.mk
+@@ -2,6 +2,8 @@
+ 
+ # XXX using libutils for simulator build only...
+ #
++
++ifneq ($(BOARD_NO_REFERENCE_RIL), true)
+ LOCAL_PATH:= $(call my-dir)
+ include $(CLEAR_VARS)
+ 
+@@ -51,3 +53,4 @@ else
+   LOCAL_MODULE:= reference-ril
+   include $(BUILD_EXECUTABLE)
+ endif
++endif # BOARD_NO_REFERENCE_RIL
+diff --git a/rild/Android.mk b/rild/Android.mk
+index 5192fd9..e6573b1 100644
+--- a/rild/Android.mk
++++ b/rild/Android.mk
+@@ -1,5 +1,6 @@
+ # Copyright 2006 The Android Open Source Project
+ 
++ifneq ($(BOARD_PROVIDES_RILD), true)
+ LOCAL_PATH:= $(call my-dir)
+ include $(CLEAR_VARS)
+ 
+@@ -37,3 +38,4 @@ LOCAL_MODULE:= radiooptions
+ LOCAL_MODULE_TAGS := debug
+ 
+ include $(BUILD_EXECUTABLE)
++endif # BOARD_PROVIDES_RILD
